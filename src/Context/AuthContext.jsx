@@ -18,7 +18,10 @@ export function AuthProvider({ children }) {
         setUser(userData);
         setIsAuthenticated(true);
       } catch (error) {
-        console.error("Erreur lors de la lecture des données utilisateur:", error);
+        console.error(
+          "Erreur lors de la lecture des données utilisateur:",
+          error,
+        );
         localStorage.removeItem("user");
         localStorage.removeItem("token");
       }
@@ -53,7 +56,10 @@ export function AuthProvider({ children }) {
       }
     } catch (error) {
       console.error("Erreur de connexion:", error);
-      return { success: false, error: "Une erreur est survenue lors de la connexion" };
+      return {
+        success: false,
+        error: "Une erreur est survenue lors de la connexion",
+      };
     }
   };
 
@@ -91,26 +97,38 @@ async function simulateLogin(email, password) {
 
   // Pour la démo, on accepte n'importe quel email/mot de passe
   // En production, vous devrez vérifier avec votre backend
-  
+
   // Détection du rôle selon l'email (pour la démo)
   // En production, cela viendra du backend
   let role = "medecin";
   let nom = "Martin";
   let prenom = "Dr.";
-  
-  if (email.toLowerCase().includes("reception") || email.toLowerCase().includes("recep")) {
+
+  if (
+    email.toLowerCase().includes("reception") ||
+    email.toLowerCase().includes("recep")
+  ) {
     role = "receptionniste";
     nom = "Dupont";
     prenom = "Marie";
-  } else if (email.toLowerCase().includes("laborantin") || email.toLowerCase().includes("labo")) {
+  } else if (
+    email.toLowerCase().includes("laborantin") ||
+    email.toLowerCase().includes("labo")
+  ) {
     role = "laborantin";
     nom = "Bernard";
     prenom = "Sophie";
-  } else if (email.toLowerCase().includes("comptable") || email.toLowerCase().includes("compta")) {
+  } else if (
+    email.toLowerCase().includes("comptable") ||
+    email.toLowerCase().includes("compta")
+  ) {
     role = "comptable";
     nom = "Durand";
     prenom = "Jean";
-  } else if (email.toLowerCase().includes("pharmacien") || email.toLowerCase().includes("pharma")) {
+  } else if (
+    email.toLowerCase().includes("pharmacien") ||
+    email.toLowerCase().includes("pharma")
+  ) {
     role = "pharmacien";
     nom = "Moreau";
     prenom = "Pierre";
@@ -135,4 +153,3 @@ async function simulateLogin(email, password) {
     error: "Email ou mot de passe incorrect",
   };
 }
-

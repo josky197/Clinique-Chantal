@@ -1,363 +1,258 @@
-import { useState } from 'react';
-import { User, Phone, Mail, MapPin, Calendar, Clock, Stethoscope, Save, X } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useState } from "react";
+import {
+  User, Phone, Mail, MapPin, Calendar,
+  Clock, Stethoscope, Save, X, Shield, AlertTriangle,
+} from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
-export default function PatientRegistrationModal() {
+const SERVICES = [
+  "Consultation générale", "Cardiologie", "Pédiatrie",
+  "Gynécologie", "Dermatologie", "Ophtalmologie",
+  "ORL", "Neurologie", "Radiologie", "Laboratoire",
+];
+
+const generateNumeroDossier = () => {
+  const year = new Date().getFullYear();
+  const num = String(Math.floor(Math.random() * 9000) + 1000);
+  return `PAT-${year}-${num}`;
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+
+export default function AjoutPatient() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-  
+  const [numeroDossier] = useState(generateNumeroDossier);
+
   const [formData, setFormData] = useState({
-    prenom: '',
-    nom: '',
-    sexe: '',
-    dateNaissance: '',
-    adresse: '',
-    telephone: '',
-    email: '',
+    prenom: "", nom: "", sexe: "", dateNaissance: "",
+    adresse: "", telephone: "", email: "",
+    contactUrgenceNom: "", contactUrgenceTelephone: "",
+    assuranceNom: "", assuranceNumero: "",
   });
 
   const [serviceSelectionne, setServiceSelectionne] = useState("");
-  const [priseRendezVous, setPriseRendezVous] = useState(false);
-  const [dateRendezVous, setDateRendezVous] = useState("");
-  const [heureRendezVous, setHeureRendezVous] = useState("");
-
-  const services = [
-    "Consultation générale",
-    "Cardiologie",
-    "Pédiatrie",
-    "Gynécologie",
-    "Dermatologie",
-    "Ophtalmologie",
-    "ORL",
-    "Neurologie",
-    "Radiologie",
-    "Laboratoire",
-  ];
+  const [priseRendezVous, setPriseRendezVous]   = useState(false);
+  const [dateRendezVous, setDateRendezVous]     = useState("");
+  const [heureRendezVous, setHeureRendezVous]   = useState("");
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
 
-    // Validation des champs obligatoires
-    if (!formData.prenom || !formData.nom || !formData.sexe || !formData.dateNaissance || 
-        !formData.telephone || !serviceSelectionne) {
-      alert('Veuillez remplir tous les champs obligatoires');
+    const { prenom, nom, sexe, dateNaissance, telephone } = formData;
+    if (!prenom || !nom || !sexe || !dateNaissance || !telephone || !serviceSelectionne) {
+      alert("Veuillez remplir tous les champs obligatoires.");
       setLoading(false);
       return;
     }
-
     if (priseRendezVous && (!dateRendezVous || !heureRendezVous)) {
-      alert('Veuillez remplir la date et l\'heure du rendez-vous');
+      alert("Veuillez renseigner la date et l'heure du rendez-vous.");
       setLoading(false);
       return;
     }
 
-    const donneesPatient = {
+    const payload = {
+      numeroDossier,
       ...formData,
       service: serviceSelectionne,
-      rendezVous: priseRendezVous ? {
-        date: dateRendezVous,
-        heure: heureRendezVous,
-      } : null,
+      rendezVous: priseRendezVous ? { date: dateRendezVous, heure: heureRendezVous } : null,
     };
 
     try {
-      // Simulation d'un appel API
-      console.log('Données du patient:', donneesPatient);
-      
-      // Ici, vous feriez l'appel API réel
-      // await api.creerPatient(donneesPatient);
-      
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulation délai
-      
-      alert('Patient enregistré avec succès !' + (priseRendezVous ? ' Rendez-vous créé.' : ''));
-      
-      // Réinitialiser le formulaire
-      setFormData({
-        prenom: '',
-        nom: '',
-        sexe: '',
-        dateNaissance: '',
-        adresse: '',
-        telephone: '',
-        email: '',
-      });
-      setServiceSelectionne("");
-      setPriseRendezVous(false);
-      setDateRendezVous("");
-      setHeureRendezVous("");
-      
-      // Optionnel : rediriger vers la liste des patients
-      // navigate('/patients');
-    } catch (error) {
-      console.error('Erreur lors de l\'enregistrement:', error);
-      alert('Une erreur est survenue lors de l\'enregistrement');
+      // TODO: remplacer par l'appel API réel
+      await new Promise((r) => setTimeout(r, 800));
+      console.log("Patient enregistré :", payload);
+      alert(`Patient enregistré avec succès !\nN° de dossier : ${numeroDossier}`);
+      navigate("/liste-patients");
+    } catch {
+      alert("Une erreur est survenue lors de l'enregistrement.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="h-full bg-gray-50">
-      <div className="max-w-4xl mx-auto p-8">
-        {/* Header */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-2xl font-semibold text-gray-800">
-                Nouveau Patient
-              </h2>
-              <p className="text-sm text-gray-500 mt-1">
-                Enregistrez les informations de base du patient et redirigez-le vers un service
-              </p>
-            </div>
-            <button
-              onClick={() => navigate(-1)}
-              className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition"
-            >
-              <X className="w-5 h-5" />
-            </button>
+    <main className="p-8 animate-in fade-in duration-700">
+      <div className="max-w-4xl mx-auto space-y-6">
+        {/* En-tête */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-slate-900">Nouveau patient</h1>
+            <p className="text-slate-500 mt-1 font-medium">
+              Numéro de dossier attribué :{" "}
+              <span className="font-black text-[#0062a2]">{numeroDossier}</span>
+            </p>
           </div>
+          <button
+            onClick={() => navigate(-1)}
+            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition"
+          >
+            <X size={20} />
+          </button>
         </div>
 
-        {/* Formulaire */}
-        <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <div className="space-y-6">
-            {/* Section 1 : Données Personnelles */}
-            <div>
-              <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                <User className="w-5 h-5 text-teal-600" />
-                Informations Personnelles
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Prénom <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="prenom"
-                    value={formData.prenom}
-                    onChange={handleChange}
-                    required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-                    placeholder="Entrez le prénom"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Nom <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="nom"
-                    value={formData.nom}
-                    onChange={handleChange}
-                    required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-                    placeholder="Entrez le nom"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Sexe <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    name="sexe"
-                    value={formData.sexe}
-                    onChange={handleChange}
-                    required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-                  >
-                    <option value="">Sélectionner</option>
-                    <option value="M">Masculin</option>
-                    <option value="F">Féminin</option>
-                    <option value="Autre">Autre</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Date de naissance <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="date"
-                    name="dateNaissance"
-                    value={formData.dateNaissance}
-                    onChange={handleChange}
-                    required
-                    max={new Date().toISOString().split("T")[0]}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-                  />
-                </div>
-              </div>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Section 1 : Informations personnelles */}
+          <FormSection icon={<User size={18} />} title="Informations personnelles">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Field label="Prénom" required>
+                <input name="prenom" value={formData.prenom} onChange={handleChange}
+                  placeholder="Jean" required className={inputCls} />
+              </Field>
+              <Field label="Nom" required>
+                <input name="nom" value={formData.nom} onChange={handleChange}
+                  placeholder="Dupont" required className={inputCls} />
+              </Field>
+              <Field label="Sexe" required>
+                <select name="sexe" value={formData.sexe} onChange={handleChange}
+                  required className={inputCls}>
+                  <option value="">Sélectionner</option>
+                  <option value="M">Masculin</option>
+                  <option value="F">Féminin</option>
+                  <option value="Autre">Autre</option>
+                </select>
+              </Field>
+              <Field label="Date de naissance" required>
+                <input type="date" name="dateNaissance" value={formData.dateNaissance}
+                  onChange={handleChange} max={new Date().toISOString().split("T")[0]}
+                  required className={inputCls} />
+              </Field>
             </div>
+          </FormSection>
 
-            {/* Section 2 : Informations de Contact */}
-            <div>
-              <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                <Phone className="w-5 h-5 text-teal-600" />
-                Informations de Contact
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-1">
-                    <MapPin className="w-4 h-4" />
-                    Adresse
-                  </label>
-                  <input
-                    type="text"
-                    name="adresse"
-                    value={formData.adresse}
-                    onChange={handleChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-                    placeholder="123 Rue de la Santé, Ville"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-1">
-                    <Phone className="w-4 h-4" />
-                    Téléphone <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="tel"
-                    name="telephone"
-                    value={formData.telephone}
-                    onChange={handleChange}
-                    required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-                    placeholder="06 12 34 56 78"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-1">
-                    <Mail className="w-4 h-4" />
-                    Email
-                  </label>
-                  <input
-                    type="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-                    placeholder="patient@email.com"
-                  />
-                </div>
-              </div>
+          {/* Section 2 : Contact */}
+          <FormSection icon={<Phone size={18} />} title="Informations de contact">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Field label="Adresse" className="md:col-span-2">
+                <input name="adresse" value={formData.adresse} onChange={handleChange}
+                  placeholder="123 Rue de la Santé, Abidjan" className={inputCls} />
+              </Field>
+              <Field label="Téléphone" required>
+                <input type="tel" name="telephone" value={formData.telephone}
+                  onChange={handleChange} placeholder="+225 07 00 00 00 00"
+                  required className={inputCls} />
+              </Field>
+              <Field label="Email">
+                <input type="email" name="email" value={formData.email}
+                  onChange={handleChange} placeholder="patient@email.com" className={inputCls} />
+              </Field>
             </div>
+          </FormSection>
 
-            {/* Section 3 : Service et Rendez-vous */}
-            <div>
-              <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                <Stethoscope className="w-5 h-5 text-teal-600" />
-                Redirection vers un Service
-              </h3>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Sélectionner un service <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    value={serviceSelectionne}
-                    onChange={(e) => setServiceSelectionne(e.target.value)}
-                    required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-                  >
-                    <option value="">Sélectionner un service</option>
-                    {services.map((service) => (
-                      <option key={service} value={service}>
-                        {service}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Option de prise de rendez-vous */}
-                <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
-                  <label className="flex items-center gap-2 mb-3 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={priseRendezVous}
-                      onChange={(e) => setPriseRendezVous(e.target.checked)}
-                      className="w-4 h-4 text-teal-600 focus:ring-teal-500 rounded"
-                    />
-                    <span className="text-sm font-medium text-gray-700">
-                      Prendre un rendez-vous maintenant
-                    </span>
-                  </label>
-
-                  {priseRendezVous && (
-                    <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-1">
-                          <Calendar className="w-4 h-4" />
-                          Date du rendez-vous <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                          type="date"
-                          value={dateRendezVous}
-                          onChange={(e) => setDateRendezVous(e.target.value)}
-                          min={new Date().toISOString().split("T")[0]}
-                          required={priseRendezVous}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-1">
-                          <Clock className="w-4 h-4" />
-                          Heure <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                          type="time"
-                          value={heureRendezVous}
-                          onChange={(e) => setHeureRendezVous(e.target.value)}
-                          required={priseRendezVous}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-                        />
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
+          {/* Section 3 : Contact urgence */}
+          <FormSection icon={<AlertTriangle size={18} />} title="Contact d'urgence">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Field label="Nom complet">
+                <input name="contactUrgenceNom" value={formData.contactUrgenceNom}
+                  onChange={handleChange} placeholder="Marie Dupont" className={inputCls} />
+              </Field>
+              <Field label="Téléphone">
+                <input type="tel" name="contactUrgenceTelephone"
+                  value={formData.contactUrgenceTelephone} onChange={handleChange}
+                  placeholder="+225 05 00 00 00 00" className={inputCls} />
+              </Field>
             </div>
-          </div>
+          </FormSection>
 
-          {/* Footer Buttons */}
-          <div className="flex justify-end gap-4 mt-8 pt-6 border-t border-gray-200">
-            <button
-              type="button"
-              onClick={() => navigate(-1)}
-              className="px-6 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition font-medium"
-            >
+          {/* Section 4 : Assurance */}
+          <FormSection icon={<Shield size={18} />} title="Assurance / Mutuelle">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Field label="Nom de l'assurance">
+                <input name="assuranceNom" value={formData.assuranceNom}
+                  onChange={handleChange} placeholder="MUGEFCI, CNPS..." className={inputCls} />
+              </Field>
+              <Field label="Numéro de police / adhérent">
+                <input name="assuranceNumero" value={formData.assuranceNumero}
+                  onChange={handleChange} placeholder="A-0000000" className={inputCls} />
+              </Field>
+            </div>
+          </FormSection>
+
+          {/* Section 5 : Service & Rendez-vous */}
+          <FormSection icon={<Stethoscope size={18} />} title="Redirection & Rendez-vous">
+            <div className="space-y-4">
+              <Field label="Service" required>
+                <select value={serviceSelectionne} onChange={(e) => setServiceSelectionne(e.target.value)}
+                  required className={inputCls}>
+                  <option value="">Sélectionner un service</option>
+                  {SERVICES.map((s) => <option key={s} value={s}>{s}</option>)}
+                </select>
+              </Field>
+
+              <label className="flex items-center gap-3 cursor-pointer p-4 border border-slate-200 rounded-xl hover:bg-slate-50 transition">
+                <input type="checkbox" checked={priseRendezVous}
+                  onChange={(e) => setPriseRendezVous(e.target.checked)}
+                  className="w-4 h-4 accent-[#0062a2]" />
+                <span className="text-sm font-semibold text-slate-700">
+                  Prendre un rendez-vous maintenant
+                </span>
+              </label>
+
+              {priseRendezVous && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pl-1">
+                  <Field label="Date du rendez-vous" required icon={<Calendar size={14} />}>
+                    <input type="date" value={dateRendezVous}
+                      onChange={(e) => setDateRendezVous(e.target.value)}
+                      min={new Date().toISOString().split("T")[0]}
+                      required={priseRendezVous} className={inputCls} />
+                  </Field>
+                  <Field label="Heure" required icon={<Clock size={14} />}>
+                    <input type="time" value={heureRendezVous}
+                      onChange={(e) => setHeureRendezVous(e.target.value)}
+                      required={priseRendezVous} className={inputCls} />
+                  </Field>
+                </div>
+              )}
+            </div>
+          </FormSection>
+
+          {/* Boutons */}
+          <div className="flex justify-end gap-4 pt-2">
+            <button type="button" onClick={() => navigate(-1)}
+              className="px-6 py-3 text-slate-700 bg-slate-100 rounded-2xl font-semibold hover:bg-slate-200 transition">
               Annuler
             </button>
-            <button
-              type="submit"
-              disabled={loading}
-              className="px-6 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition font-medium flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
+            <button type="submit" disabled={loading}
+              className="px-8 py-3 bg-[#0062a2] text-white rounded-2xl font-semibold flex items-center gap-2 hover:bg-[#004f82] transition shadow-lg shadow-blue-100 disabled:opacity-50 disabled:cursor-not-allowed">
               {loading ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                  Enregistrement...
-                </>
+                <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Enregistrement...</>
               ) : (
-                <>
-                  <Save className="w-4 h-4" />
-                  Enregistrer le patient
-                </>
+                <><Save size={16} /> Enregistrer le patient</>
               )}
             </button>
           </div>
         </form>
       </div>
-    </div>
+    </main>
   );
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Sous-composants
+
+const inputCls =
+  "w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#0062a2]/20 focus:border-[#0062a2] transition";
+
+const FormSection = ({ icon, title, children }) => (
+  <div className="bg-white rounded-4xl border border-slate-100 shadow-sm p-6 space-y-4">
+    <h3 className="text-sm font-bold text-[#0062a2] flex items-center gap-2 uppercase tracking-wider">
+      {icon} {title}
+    </h3>
+    {children}
+  </div>
+);
+
+const Field = ({ label, required, icon, children, className = "" }) => (
+  <div className={className}>
+    <label className="flex items-center gap-1 text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
+      {icon} {label} {required && <span className="text-red-500">*</span>}
+    </label>
+    {children}
+  </div>
+);

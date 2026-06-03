@@ -1,120 +1,82 @@
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
+import { Search, Bell, Settings } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { Menu, Search, Bell, User, ChevronDown } from "lucide-react";
 import { useAuth } from "../../Context/AuthContext";
 
-function Header({ onMenuToggle }) {
-  const { user, logout } = useAuth();
-  const navigate = useNavigate();
-  const [showUserMenu, setShowUserMenu] = useState(false);
-  const userMenuRef = useRef(null);
+const ROLE_LABELS = {
+  medecin:        "Médecin",
+  receptionniste: "Réceptionniste",
+  pharmacien:     "Pharmacien",
+  laborantin:     "Laborantin",
+  comptable:      "Comptable",
+};
 
-  // Fermer le menu utilisateur quand on clique ailleurs
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
-        setShowUserMenu(false);
-      }
-    };
+const ROLE_COLORS = {
+  medecin:        "bg-blue-50 text-[#0062a2]",
+  receptionniste: "bg-purple-50 text-purple-600",
+  pharmacien:     "bg-green-50 text-green-700",
+  laborantin:     "bg-orange-50 text-orange-600",
+  comptable:      "bg-yellow-50 text-yellow-700",
+};
 
-    if (showUserMenu) {
-      document.addEventListener("mousedown", handleClickOutside);
-    }
+// ─────────────────────────────────────────────────────────────────────────────
 
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [showUserMenu]);
+export default function Header() {
+  const { user } = useAuth();
+  const navigate  = useNavigate();
+  const [search, setSearch] = useState("");
+
+  const initials = user
+    ? `${user.prenom?.[0] ?? ""}${user.nom?.[0] ?? ""}`.toUpperCase()
+    : "?";
 
   return (
-    <header className="bg-white border-b border-gray-200 sticky top-0 z-40">
-      <div className="flex items-center justify-between px-4 lg:px-6 h-16">
-        {/* Menu mobile */}
-        <button
-          onClick={onMenuToggle}
-          className="lg:hidden p-2 rounded-md text-gray-600 hover:bg-gray-100"
-        >
-          <Menu className="w-6 h-6" />
+    <header className="h-16 flex items-center justify-between px-6 bg-white/90 backdrop-blur-md sticky top-0 z-20 border-b border-slate-50">
+      {/* Recherche */}
+      <div className="relative w-72">
+        <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+        <input
+          type="text"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Rechercher un patient, un dossier…"
+          className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-2 pl-10 pr-4 text-sm text-slate-700 placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-[#0062a2]/15 focus:border-[#0062a2] transition-all"
+        />
+      </div>
+
+      {/* Actions & profil */}
+      <div className="flex items-center gap-3">
+        {/* Notifications */}
+        <button className="relative p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-xl transition-all">
+          <Bell size={20} />
+          <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white" />
         </button>
 
-        {/* Recherche */}
-        <div className="flex-1 max-w-xl mx-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Rechercher un patient, une consultation..."
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-            />
+        {/* Paramètres */}
+        <button
+          onClick={() => navigate("/settings")}
+          className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-xl transition-all"
+        >
+          <Settings size={20} />
+        </button>
+
+        <div className="w-px h-6 bg-slate-100 mx-1" />
+
+        {/* Profil utilisateur */}
+        <div className="flex items-center gap-3">
+          <div className="text-right hidden md:block">
+            <p className="text-sm font-bold text-slate-800 leading-tight">
+              {user?.prenom} {user?.nom}
+            </p>
+            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${ROLE_COLORS[user?.role] ?? "bg-slate-100 text-slate-500"}`}>
+              {ROLE_LABELS[user?.role] ?? "—"}
+            </span>
           </div>
-        </div>
-
-        {/* Actions droite */}
-        <div className="flex items-center gap-4">
-          {/* Notifications */}
-          <button className="relative p-2 text-gray-600 hover:bg-gray-100 rounded-lg">
-            <Bell className="w-5 h-5" />
-            <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-          </button>
-
-          {/* Profil utilisateur */}
-          <div className="relative" ref={userMenuRef}>
-            <button
-              onClick={() => setShowUserMenu(!showUserMenu)}
-              className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-100"
-            >
-              <div className="w-8 h-8 bg-teal-600 rounded-full flex items-center justify-center text-white font-semibold">
-                DM
-              </div>
-              <ChevronDown className="w-4 h-4 text-gray-600 hidden md:block" />
-            </button>
-
-            {/* Menu déroulant utilisateur */}
-            {showUserMenu && (
-              <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
-                <div className="px-4 py-2 border-b border-gray-200">
-                  <p className="text-sm font-medium text-gray-900">
-                    {user?.prenom} {user?.nom}
-                  </p>
-                  <p className="text-xs text-gray-500">{user?.email}</p>
-                </div>
-                <button
-                  onClick={() => {
-                    navigate("/settings");
-                    setShowUserMenu(false);
-                  }}
-                  className="w-full text-left block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                >
-                  Mon profil
-                </button>
-                <button
-                  onClick={() => {
-                    navigate("/settings");
-                    setShowUserMenu(false);
-                  }}
-                  className="w-full text-left block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                >
-                  Paramètres
-                </button>
-                <hr className="my-2" />
-                <button
-                  onClick={() => {
-                    logout();
-                    navigate("/login");
-                    setShowUserMenu(false);
-                  }}
-                  className="w-full text-left block px-4 py-2 text-sm text-red-600 hover:bg-gray-50"
-                >
-                  Déconnexion
-                </button>
-              </div>
-            )}
+          <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-xs font-black ${ROLE_COLORS[user?.role] ?? "bg-slate-100 text-slate-500"}`}>
+            {initials}
           </div>
         </div>
       </div>
     </header>
   );
 }
-
-export default Header;
-
